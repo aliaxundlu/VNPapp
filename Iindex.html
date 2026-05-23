@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VnP - Game Store</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root{
+            /* Light theme (default): white background with purple accents */
+            --bg-0: #ffffff;
+            --bg-1: #fbf8ff;
+            --surface: rgba(255,255,255,0.95);
+            --muted: #3b3b3b;
+            --accent: #7B2CFF; /* primary purple */
+            --accent-2: #B89CFF; /* lighter purple */
+            --danger: #ff6b6b;
+            --text-color: #111111;
+        }
+        .theme-dark {
+            /* Dark theme overrides (keeps previous dark palette) */
+            --bg-0: #000000;
+            --bg-1: #0b0011;
+            --surface: rgba(10,10,10,0.9);
+            --muted: #bdb8c8;
+            --accent: #7B2CFF;
+            --accent-2: #B89CFF;
+            --danger: #ff6b6b;
+            --text-color: #e8e6ee;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(123,44,255,0.08) 0%, transparent 12%),
+                        linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+        }
+        .font-small { font-size: 0.94rem; }
+        .font-large { font-size: 1.08rem; }
+        html::before,
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.72;
+        }
+        html::before {
+            width: 420px;
+            height: 420px;
+            top: 6%;
+            right: -90px;
+            background: linear-gradient(135deg, rgba(123,44,255,0.35), rgba(184,156,255,0.12));
+            clip-path: polygon(0% 0%, 100% 15%, 100% 100%);
+            transform: rotate(-18deg);
+        }
+        body::before {
+            width: 420px;
+            height: 420px;
+            top: 6%;
+            left: -80px;
+            background: linear-gradient(135deg, rgba(184,156,255,0.45), rgba(123,44,255,0.15));
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            transform: rotate(-12deg);
+        }
+        body::after {
+            width: 320px;
+            height: 320px;
+            bottom: 6%;
+            right: -40px;
+            background: linear-gradient(180deg, rgba(123,44,255,0.34), rgba(184,156,255,0.12));
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+            transform: rotate(14deg);
+        }
+
+        /* ── Header ── */
+        header {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(123,44,255,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+        .logo { display:flex; align-items:center; gap:0.6rem; cursor:pointer; }
+        .logo .logo-mark { width:120px; height:auto; flex:0 0 120px; }
+        .logo .logo-text { display:none; }
+        .search-bar { flex: 1; max-width: 420px; position: relative; }
+        .search-bar input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            padding-right: 4rem;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(18,10,22,0.6);
+            color: #e8e6ee;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+            font-size:0.97rem;
+        }
+        .search-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 6px 20px rgba(123,44,255,0.12); }
+        .search-bar button.search-btn {
+            position: absolute;
+            right: 0.4rem;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: rgba(123,44,255,0.18);
+            color: #e8e6ee;
+            padding: 0.75rem 0.95rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.25s ease, transform 0.25s ease;
+            font-size: 0.95rem;
+        }
+        .search-bar button.search-btn:hover { background: rgba(123,44,255,0.28); transform: translateY(-50%) scale(1.02); }
+        .nav-buttons { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .btn-theme {
+            background: transparent; color: #e8e6ee; border: 1px solid rgba(255,255,255,0.08);
+        }
+        .store-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; align-items: end; }
+        .store-controls .control-group { display: flex; flex-direction: column; gap: 0.45rem; color: #e8e6ee; }
+        .store-controls label { font-size: 0.85rem; color: #bdb8c8; }
+        .store-controls select { width: 100%; padding: 0.8rem 1rem; border-radius: 10px; background: rgba(18,10,22,0.6); border: 1px solid rgba(255,255,255,0.04); color: #e8e6ee; }
+        .control-actions { align-self: start; }
+        .control-actions .btn { width: 100%; }
+        .recommendation-card { border: 1px solid rgba(255,255,255,0.05); background: rgba(12,8,14,0.6); border-radius: 10px; overflow: hidden; transition: transform 0.28s ease, border-color 0.28s ease; }
+        .recommendation-card:hover { transform: translateY(-6px); border-color: var(--accent); }
+        .recommendation-card .game-info { padding: 1.3rem; }
+        .recommendation-title { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .recommendation-title span { font-weight: 700; }
+        .wishlist-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.7rem; border-radius: 999px; background: rgba(123,44,255,0.12); color: var(--accent); font-size: 0.82rem; }
+        .page-title { margin-bottom: 1rem; }
+        .order-item { background: rgba(20,30,20,0.85); border: 1px solid #1a3a1a; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        .order-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        .order-item-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+        .order-item-meta div { color: #b0b0b0; font-size: 0.9rem; }
+        .theme-dark { --bg-0: #07070b; --bg-1: #10081a; }
+        .theme-dark body { background: radial-gradient(1200px 600px at 10% 10%, rgba(123,44,255,0.1) 0%, transparent 12%), linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 100%); }
+        .theme-dark header, .theme-dark .modal-content, .theme-dark .cart-sidebar, .theme-dark .profile-card, .theme-dark .library-card { background: rgba(2,2,8,0.95); }
+        .cart-icon { position: relative; cursor: pointer; font-size: 1.45rem; transition: color 0.25s ease; }
+        .cart-icon:hover { color: var(--accent); }
+        .cart-count {
+            position: absolute; top: -8px; right: -8px;
+            background: var(--danger); color: white;
+            border-radius: 50%; width: 20px; height: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: bold;
+        }
+        .auth-buttons { display: flex; gap: 0.8rem; }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.97rem; transition: all 0.25s ease; font-weight: 700; }
+        .btn-login { background: transparent; color: #e8e6ee; border: 1px solid rgba(255,255,255,0.04); }
+        .btn-login:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-download, .btn-signup { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011; border: none; box-shadow: 0 8px 20px rgba(123,44,255,0.08); }
+        .btn-download:hover, .btn-signup:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(123,44,255,0.12); }
+        .btn-library { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011; border: none; box-shadow: 0 8px 20px rgba(123,44,255,0.08); }
+        .btn-library:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(123,44,255,0.12); }
+        .logout-btn { background: transparent; color: #e8e6ee; border: 1px solid var(--danger); padding: 0.5rem 1rem; }
+        .logout-btn:hover { background: rgba(255,107,107,0.08); color: var(--danger); }
+        .user-profile { display: flex; align-items: center; gap: 1rem; position: relative; }
+        .profile-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #fff; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .profile-avatar:hover { transform: scale(1.08); box-shadow: 0 6px 22px rgba(123,44,255,0.18); }
+
+        /* ── Profile Dropdown ── */
+        .profile-dropdown {
+            position: absolute; top: 54px; right: 0;
+            background: rgba(6,4,10,0.98); border: 1px solid rgba(123,44,255,0.06);
+            border-radius: 8px; min-width: 180px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: none; z-index: 200;
+            animation: fadeIn 0.2s ease;
+        }
+        .profile-dropdown.open { display: block; }
+        .dropdown-item {
+            padding: 0.85rem 1.2rem; cursor: pointer;
+            display: flex; align-items: center; gap: 0.7rem;
+            font-size: 0.95rem; color: #e8e6ee;
+            transition: background 0.2s ease, color 0.2s ease;
+            border-bottom: 1px solid rgba(123,44,255,0.03);
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: rgba(123,44,255,0.06); color: var(--accent); }
+        .dropdown-item.danger:hover { background: rgba(255,107,107,0.08); color: var(--danger); }
+
+        /* ── Pages ── */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ── Hero ── */
+        .hero { max-width: 1400px; margin: 2rem auto; padding: 0 2rem; text-align: center; }
+        .hero h1 {
+            font-size: 3rem; margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.2rem; color: var(--muted); margin-bottom: 2rem; }
+
+        /* ── Store Grid ── */
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 2rem; }
+        .section-title { font-size: 2rem; margin: 2rem 0 1.5rem; color: #e8e6ee; border-bottom: 2px solid var(--accent-2); padding-bottom: 0.5rem; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+        .game-card {
+            background: rgba(12,8,14,0.6); border-radius: 10px; overflow: hidden;
+            transition: all 0.28s ease; border: 1px solid rgba(255,255,255,0.03);
+        }
+        .game-card:hover { transform: translateY(-8px); border-color: var(--accent); box-shadow: 0 18px 40px rgba(123,44,255,0.14); }
+        .game-image {
+            width: 100%; height: 180px;
+            background: linear-gradient(135deg, rgba(6,4,10,0.6), rgba(6,4,10,0.4));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; overflow: hidden; transition: transform 0.28s ease;
+        }
+        .game-card:hover .game-image { transform: scale(1.05); }
+        .game-image img { width: 100%; height: 100%; object-fit: cover; }
+        .game-fallback {
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff;
+            font-weight: 700; text-align: center; padding: 1rem; font-size: 0.95rem;
+        }
+        .game-info { padding: 1.5rem; }
+        .game-title-link {
+            font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem;
+            color: #e8e6ee; cursor: pointer; display: inline-block;
+            transition: color 0.2s ease; text-decoration: none;
+        }
+        .game-title-link:hover { color: var(--accent-2); text-decoration: underline; }
+        .game-genre { color: var(--accent-2); font-size: 0.85rem; margin-bottom: 0.8rem; }
+        .game-description { color: var(--muted); font-size: 0.92rem; margin-bottom: 1rem; line-height: 1.45; }
+        .game-price { font-size: 1.4rem; font-weight: 800; color: var(--accent-2); margin-bottom: 1rem; }
+        .discount-badge { display: inline-block; background: #ff6b6b; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem; }
+        .original-price { text-decoration: line-through; color: #808080; margin-right: 0.5rem; }
+        .btn-buy { width: 100%; padding: 0.8rem; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011; border: none; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.22s ease; }
+        .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(123,44,255,0.12); }
+        .btn-buy:active { transform: scale(0.98); }
+        .btn-owned { background: #4a7c59; color: white; cursor: default; }
+        .btn-owned:hover { transform: none; box-shadow: none; }
+
+        /* ── Game Detail Page ── */
+        #detailPage { animation: fadeIn 0.3s ease; }
+        .detail-container { max-width: 1100px; margin: 2rem auto; padding: 0 2rem; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a;
+            color: #e0e0e0; padding: 0.6rem 1.2rem; border-radius: 4px;
+            cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .detail-hero {
+            display: grid; grid-template-columns: 1.3fr 1fr; gap: 2.5rem;
+            margin-bottom: 3rem; align-items: start;
+        }
+        .detail-cover {
+            width: 100%; border-radius: 10px; overflow: hidden;
+            border: 1px solid #1a3a1a; aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1a3a1a, #0a0e0a);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-cover .fallback-large {
+            background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #0b0011;
+            font-weight: bold; font-size: 1.5rem; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; text-align: center; padding: 1.5rem;
+        }
+        .detail-info { display: flex; flex-direction: column; gap: 1rem; }
+        .detail-title { font-size: 2.2rem; font-weight: bold; line-height: 1.2; }
+        .detail-genre-badge {
+            display: inline-block; background: rgba(123,44,255,0.06);
+            border: 1px solid var(--accent); color: var(--accent);
+            padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight:700;
+        }
+        .detail-price-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+        .detail-price { font-size: 2rem; font-weight: bold; color: var(--accent-2); }
+        .detail-original { text-decoration: line-through; color: #808080; font-size: 1.1rem; }
+        .detail-discount { background: #ff6b6b; color: white; padding: 0.3rem 0.7rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .meta-item { background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a; border-radius: 6px; padding: 0.8rem; }
+        .meta-label { font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem; }
+        .meta-value { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; }
+        .detail-buy-btn {
+            padding: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #0b0011; border: none; border-radius: 8px;
+            font-size: 1.05rem; font-weight: 800; cursor: pointer;
+            transition: all 0.22s ease; width: 100%;
+        }
+        .detail-buy-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(123,44,255,0.12); }
+        .detail-buy-btn.owned { background: #4a7c59; color: white; cursor: default; }
+        .detail-buy-btn.owned:hover { transform: none; box-shadow: none; }
+        .detail-section { margin-bottom: 3rem; }
+        .detail-section h2 { font-size: 1.5rem; color: #e8e6ee; border-bottom: 2px solid var(--accent-2); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+        .detail-description { color: #b0b0b0; line-height: 1.8; font-size: 1rem; }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+        .tag {
+            background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a;
+            color: #b0b0b0; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .tag:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Stars ── */
+        .stars { display: flex; gap: 2px; }
+        .star { color: var(--accent); font-size: 1rem; }
+        .star.empty { color: #1a3a1a; }
+
+        /* ── Rating Summary ── */
+        .rating-summary {
+            display: grid; grid-template-columns: auto 1fr; gap: 2rem;
+            align-items: center; background: rgba(20,30,20,0.8);
+            border: 1px solid #1a3a1a; border-radius: 8px; padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .big-rating { text-align: center; }
+        .big-rating .number { font-size: 3.5rem; font-weight: bold; color: var(--accent-2); line-height: 1; }
+        .big-rating .out-of { color: #808080; font-size: 0.9rem; margin-top: 0.3rem; }
+        .big-rating .count { color: #b0b0b0; font-size: 0.85rem; margin-top: 0.4rem; }
+        .rating-bars { display: flex; flex-direction: column; gap: 0.6rem; }
+        .rating-bar-row { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; }
+        .rating-bar-row .label { color: #b0b0b0; width: 40px; }
+        .bar-track { flex: 1; background: #1a3a1a; border-radius: 2px; height: 8px; overflow: hidden; }
+        .bar-fill { height: 100%; background: linear-gradient(135deg, var(--accent-2), var(--accent)); border-radius: 2px; transition: width 0.45s ease; }
+        .rating-bar-row .pct { color: #808080; width: 35px; text-align: right; font-size: 0.8rem; }
+
+        /* ── Comments ── */
+        .comment-form { background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .comment-form h3 { color: var(--accent); margin-bottom: 1rem; font-size: 1.05rem; font-weight:700; }
+        .comment-actions { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0 0.75rem; }
+        .comment-actions label { color: #b0b0b0; font-size: 0.95rem; }
+        .comment-actions select { padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid #1a3a1a; background: rgba(10,14,10,0.8); color: #e0e0e0; }
+        .rating-input { display: flex; gap: 6px; margin-bottom: 1rem; cursor: pointer; }
+        .rating-input .star-btn { font-size: 1.5rem; color: #1a3a1a; transition: color 0.2s ease; cursor: pointer; }
+        .rating-input .star-btn.active, .rating-input .star-btn:hover { color: var(--accent); }
+        .comment-form textarea {
+            width: 100%; background: rgba(10,14,10,0.8); border: 1px solid #1a3a1a;
+            color: #e0e0e0; border-radius: 4px; padding: 0.8rem; font-family: inherit;
+            font-size: 0.95rem; resize: vertical; min-height: 100px; transition: border-color 0.3s;
+        }
+        .comment-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 6px 18px rgba(123,44,255,0.08); }
+        .submit-comment-btn {
+            margin-top: 0.8rem; padding: 0.7rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011;
+            border: none; border-radius: 4px; font-weight: bold; cursor: pointer;
+            font-size: 0.95rem; transition: all 0.3s ease;
+        }
+        .submit-comment-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.3); }
+        .comment-card {
+            background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a;
+            border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .comment-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; }
+        .comment-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #000; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .comment-meta { flex: 1; }
+        .comment-author { font-weight: bold; font-size: 0.95rem; }
+        .comment-date { font-size: 0.78rem; color: #808080; margin-top: 0.1rem; }
+        .comment-text { color: #b0b0b0; line-height: 1.6; font-size: 0.93rem; }
+        .no-comments { text-align: center; padding: 2rem; color: #808080; border: 1px dashed #1a3a1a; border-radius: 8px; }
+
+        /* ── Modals ── */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content {
+            background: linear-gradient(135deg, rgba(8,6,12,0.9) 0%, rgba(6,4,8,0.95) 100%);
+            margin: 5% auto; padding: 2rem; border: 1px solid rgba(123,44,255,0.04);
+            border-radius: 12px; width: 90%; max-width: 520px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close { color: #e8e6ee; float: right; font-size: 2rem; font-weight: bold; cursor: pointer; transition: color 0.25s ease; }
+        .close:hover { color: var(--accent); }
+        .modal h2 { margin-bottom: 1.2rem; color: var(--accent); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #e0e0e0; font-weight: 500; }
+        .form-group input { width: 100%; padding: 0.8rem; border: 1px solid #1a3a1a; background: rgba(20,30,20,0.8); color: #e0e0e0; border-radius: 4px; transition: all 0.3s ease; font-size: 1rem; }
+        .form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 22px rgba(123,44,255,0.08); }
+        .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #1a3a1a; background: rgba(20,30,20,0.8); color: #e0e0e0; border-radius: 4px; font-size: 1rem; }
+        .form-group select:focus { outline: none; border-color: var(--accent); }
+        .modal-btn { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011; border: none; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.22s ease; }
+        .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(123,44,255,0.12); }
+        .toggle-form { text-align: center; margin-top: 1.5rem; color: #b0b0b0; }
+        .toggle-form a { color: var(--accent); cursor: pointer; font-weight: 700; }
+        .toggle-form a:hover { text-decoration: underline; }
+
+        /* ── Cart Sidebar ── */
+        .cart-sidebar {
+            position: fixed; right: -400px; top: 0; width: 400px; height: 100vh;
+            background: rgba(10,14,10,0.98); border-left: 1px solid #1a3a1a;
+            transition: right 0.3s ease; z-index: 999; overflow-y: auto;
+        }
+        .cart-sidebar.active { right: 0; }
+        .cart-header { padding: 1.5rem; border-bottom: 1px solid rgba(123,44,255,0.04); display: flex; justify-content: space-between; align-items: center; }
+        .cart-header h2 { color: var(--accent-2); }
+        .close-cart { font-size: 2rem; cursor: pointer; color: #e8e6ee; transition: color 0.25s ease; }
+        .close-cart:hover { color: var(--accent); }
+        .cart-items { padding: 1.5rem; }
+        .cart-item { background: rgba(20,30,20,0.8); padding: 1rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid #1a3a1a; display: flex; justify-content: space-between; align-items: center; }
+        .cart-item-name { font-weight: bold; margin-bottom: 0.3rem; }
+        .cart-item-price { color: var(--accent-2); font-weight: 800; }
+        .remove-btn { background: #ff6b6b; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; transition: all 0.3s ease; }
+        .remove-btn:hover { background: #ff5252; }
+        .cart-empty { text-align: center; padding: 2rem 1rem; color: #b0b0b0; }
+        .cart-footer { position: absolute; bottom: 0; width: 100%; background: rgba(20,30,20,0.8); border-top: 1px solid #1a3a1a; padding: 1.5rem; }
+        .cart-total { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.2rem; }
+        .cart-total .amount { color: var(--accent-2); font-weight: 800; }
+        .checkout-btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0011; border: none; border-radius: 8px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.22s ease; }
+        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(123,44,255,0.12); }
+
+        /* ── Notification ── */
+        .notification { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); color: #0b0011; padding: 0.9rem 1.25rem; border-radius: 10px; animation: slideUp 0.3s ease; z-index: 2000; box-shadow: 0 10px 30px rgba(123,44,255,0.12); }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ══════════════════════════════════════════
+           ── PROFILE PAGE ──
+        ══════════════════════════════════════════ */
+        #profilePage { animation: fadeIn 0.3s ease; }
+        .profile-container { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+        .profile-page-header {
+            display: flex; align-items: center; gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .profile-big-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 800; color: #0b0011;
+            flex-shrink: 0;
+        }
+        .profile-page-header h1 { font-size: 2rem; }
+        .profile-page-header p { color: #70008d; margin-top: 0.3rem; }
+
+        .profile-tabs {
+            display: flex; gap: 0; border-bottom: 2px solid #1a3a1a;
+            margin-bottom: 2rem;
+        }
+        .profile-tab {
+            padding: 0.8rem 1.5rem; cursor: pointer; font-size: 0.95rem;
+            color: #b0b0b0; border-bottom: 2px solid transparent;
+            margin-bottom: -2px; transition: all 0.2s ease;
+        }
+        .profile-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .profile-tab:hover { color: #e0e0e0; }
+
+        .profile-tab-content { display: none; }
+        .profile-tab-content.active { display: block; }
+
+        .profile-card {
+            background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a;
+            border-radius: 8px; padding: 1.8rem; margin-bottom: 1.5rem;
+        }
+        .profile-card h3 {
+            font-size: 1.1rem; color: var(--accent); margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.6rem; font-weight:700;
+        }
+        .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .profile-form-grid .full-width { grid-column: 1 / -1; }
+        .profile-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .profile-field label { font-size: 0.8rem; color: #808080; text-transform: uppercase; letter-spacing: 0.5px; }
+        .profile-field input, .profile-field select {
+            background: rgba(10,14,10,0.8); border: 1px solid #1a3a1a;
+            color: #e0e0e0; border-radius: 4px; padding: 0.75rem; font-size: 0.95rem;
+            transition: border-color 0.2s ease; font-family: inherit;
+        }
+        .profile-field input:focus, .profile-field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 20px rgba(123,44,255,0.06); }
+        .profile-field select option { background: #0a0e0a; }
+        .profile-save-btn {
+            padding: 0.8rem 2rem; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #0b0011; border: none; border-radius: 8px;
+            font-weight: 800; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.22s ease; margin-top: 1rem;
+        }
+        .profile-save-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(123,44,255,0.1); }
+
+        /* Credit Card Visual */
+        .card-visual {
+            background: linear-gradient(135deg, rgba(12,8,14,0.7) 0%, rgba(8,6,12,0.9) 100%);
+            border: 1px solid var(--accent); border-radius: 14px;
+            padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+            position: relative; overflow: hidden; min-height: 140px;
+        }
+        .card-visual::before {
+            content: ''; position: absolute; top: -40px; right: -40px;
+            width: 180px; height: 180px; border-radius: 50%;
+            background: rgba(123,44,255,0.05);
+        }
+        .card-visual::after {
+            content: ''; position: absolute; bottom: -60px; right: 60px;
+            width: 140px; height: 140px; border-radius: 50%;
+            background: rgba(123,44,255,0.04);
+        }
+        .card-chip { font-size: 1.8rem; margin-bottom: 0.8rem; }
+        .card-number-display {
+            font-size: 1.3rem; letter-spacing: 3px; font-family: monospace;
+            color: var(--accent-2); margin-bottom: 0.8rem; font-weight:700;
+        }
+        .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+        .card-holder-display { font-size: 0.85rem; color: #b0b0b0; }
+        .card-holder-display span { display: block; font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-top: 0.1rem; }
+        .card-expiry-display { font-size: 0.85rem; color: #b0b0b0; text-align: right; }
+        .card-expiry-display span { display: block; font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-top: 0.1rem; }
+
+        /* ── Library / Downloads Page ── */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .library-card {
+            background: rgba(20,30,20,0.8); border: 1px solid #1a3a1a;
+            border-radius: 8px; overflow: hidden; transition: border-color 0.3s ease;
+        }
+        .library-card:hover { border-color: var(--accent); }
+        .library-card-img {
+            width: 100%; height: 140px; object-fit: cover;
+            background: linear-gradient(135deg, #1a3a1a, #0a0e0a);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .library-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .library-card-body { padding: 1rem 1.2rem; }
+        .library-card-title { font-size: 1rem; font-weight: bold; margin-bottom: 0.3rem; }
+        .library-card-genre { color: var(--accent-2); font-size: 0.8rem; margin-bottom: 0.8rem; }
+        .library-card-actions { display: flex; gap: 0.6rem; }
+        .btn-dl {
+            flex: 1; padding: 0.6rem; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #000; border: none; border-radius: 4px;
+            font-size: 0.88rem; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        }
+        .btn-dl:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.3); }
+        .btn-dl-installing {
+            background: #2a2a34; color: var(--accent-2); cursor: default;
+        }
+        .btn-dl-installing:hover { transform: none; box-shadow: none; }
+        .btn-play {
+            padding: 0.6rem 1rem; background: transparent; border: 1px solid var(--accent);
+            color: var(--accent); border-radius: 6px; font-size: 0.88rem; font-weight: 800;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-play:hover { background: rgba(0,255,65,0.1); }
+        .empty-library {
+            grid-column: 1/-1; text-align: center; padding: 4rem 2rem;
+            color: #808080; border: 1px dashed #1a3a1a; border-radius: 8px;
+        }
+        .empty-library a { color: var(--accent); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .games-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+            .hero h1 { font-size: 2rem; }
+            .cart-sidebar { width: 100%; right: -100%; }
+            .nav-container { gap: 1rem; }
+            .search-bar { max-width: 200px; }
+            .detail-hero { grid-template-columns: 1fr; }
+            .rating-summary { grid-template-columns: 1fr; }
+            .profile-form-grid { grid-template-columns: 1fr; }
+            .profile-form-grid .full-width { grid-column: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+    <div class="nav-container">
+        <div class="logo" onclick="goHome()">
+            <svg class="logo-mark" viewBox="0 0 200 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+                <title>VnP</title>
+                <defs>
+                    <linearGradient id="gVnP" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#B89CFF" />
+                        <stop offset="100%" stop-color="#7B2CFF" />
+                    </linearGradient>
+                </defs>
+                <!-- stylized letters: V (purple), n (white), P (purple) -->
+                <text x="6" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="38" fill="url(#gVnP)" transform="skewX(-10)">V</text>
+                <text x="64" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#ffffff" transform="skewX(-10)">n</text>
+                <text x="110" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-weight="800" font-size="38" fill="url(#gVnP)" transform="skewX(-10)">P</text>
+            </svg>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" list="searchSuggestions" placeholder="Search games...">
+            <datalist id="searchSuggestions"></datalist>
+            <button id="searchButton" class="search-btn" type="button">🔍</button>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-library" onclick="showPage('wishlistPage')">❤️ Wishlist</button>
+            <button class="btn btn-library" onclick="openProfilePage('library')">Game Library</button>
+            <button class="btn btn-library" onclick="openProfilePage('orders')">🧾 Orders</button>
+            <div class="cart-icon" onclick="toggleCart()" id="cartIcon">
+                🛒
+                <span class="cart-count" id="cartCount">0</span>
+            </div>
+            <button class="btn btn-download" onclick="downloadApp()">⬇️ Download VnP</button>
+            <button class="btn btn-login" onclick="toggleTheme()" id="themeToggle">🌙</button>
+            <div id="authButtons" class="auth-buttons">
+                <button class="btn btn-login" onclick="openLoginModal()">Login</button>
+                <button class="btn btn-signup" onclick="openSignupModal()">Sign Up</button>
+            </div>
+            <div id="userProfile" class="user-profile" style="display:none;">
+                <div class="profile-avatar" id="userInitial" onclick="toggleProfileDropdown()">U</div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-item" onclick="openProfilePage('info')">👤 My Profile</div>
+                    <div class="dropdown-item" onclick="openProfilePage('payment')">💳 Payment Methods</div>
+                    <div class="dropdown-item danger" onclick="logout()">🚪 Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Store Page -->
+<div id="storePage" class="page active">
+    <div class="hero">
+        <h1>Welcome to VnP</h1>
+        <p>Discover and purchase the best games in the galaxy</p>
+    </div>
+    <div class="container">
+        <div class="store-controls">
+            <div class="control-group">
+                <label>Filter Genre</label>
+                <select id="genreFilter" onchange="applyFilters()">
+                    <option value="all">All Genres</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Price</label>
+                <select id="priceFilter" onchange="applyFilters()">
+                    <option value="all">All Prices</option>
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Sort By</label>
+                <select id="sortSelect" onchange="applyFilters()">
+                    <option value="relevance">Recommended</option>
+                    <option value="rating">Rating</option>
+                    <option value="priceAsc">Price: Low to High</option>
+                    <option value="priceDesc">Price: High to Low</option>
+                    <option value="newest">Newest</option>
+                </select>
+            </div>
+            <div class="control-group control-actions">
+                <button class="btn btn-library" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+        <div class="section-title">✨ Recommended for You</div>
+        <div class="games-grid" id="recommendationsGrid"></div>
+        <div id="trendingSection">
+            <h2 class="section-title">🔥 Trending Now</h2>
+            <div class="games-grid" id="gamesGrid"></div>
+        </div>
+        <h2 class="section-title" id="allGamesTitle">🎮 All Games</h2>
+        <div class="games-grid" id="allGamesGrid"></div>
+    </div>
+</div>
+<div id="wishlistPage" class="page">
+    <div class="container">
+        <button class="back-btn" onclick="goHome()">← Back to Store</button>
+        <h2 class="section-title">💖 My Wishlist</h2>
+        <div class="games-grid" id="wishlistGrid"></div>
+    </div>
+</div>
+
+<div id="detailPage" class="page">
+    <div class="container">
+        <button class="back-btn" onclick="goHome()">← Back to Store</button>
+        <div class="detail-hero">
+            <div class="detail-cover" id="detailCover"></div>
+            <div class="detail-info">
+                <div class="detail-title" id="detailTitle"></div>
+                <div class="detail-genre-badge" id="detailGenre"></div>
+                <div class="detail-price-row" id="detailPriceRow"></div>
+                <div class="meta-grid" id="detailMeta"></div>
+                <button class="detail-buy-btn" id="detailBuyBtn"></button>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h2>📖 About This Game</h2>
+            <div class="detail-description" id="detailDescription"></div>
+            <div class="detail-tags" id="detailTags"></div>
+        </div>
+
+        <div class="detail-section">
+            <h2>⭐ Ratings & Reviews</h2>
+            <div class="rating-summary" id="ratingSummary"></div>
+            <div class="comment-actions">
+                <label for="commentSort">Sort reviews</label>
+                <select id="commentSort" onchange="renderComments(currentGameId)">
+                    <option value="newest">Newest</option>
+                    <option value="top">Top Rated</option>
+                </select>
+            </div>
+
+            <div class="comment-form" id="commentForm">
+                <h3>Write a Review</h3>
+                <div class="rating-input" id="ratingInput">
+                    <span class="star-btn" data-val="1" onclick="setRating(1)">★</span>
+                    <span class="star-btn" data-val="2" onclick="setRating(2)">★</span>
+                    <span class="star-btn" data-val="3" onclick="setRating(3)">★</span>
+                    <span class="star-btn" data-val="4" onclick="setRating(4)">★</span>
+                    <span class="star-btn" data-val="5" onclick="setRating(5)">★</span>
+                </div>
+                <textarea id="commentText" placeholder="Share your thoughts about this game..."></textarea>
+                <button class="submit-comment-btn" onclick="submitComment()">Post Review</button>
+            </div>
+
+            <div id="commentsList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div id="profilePage" class="page">
+    <div class="profile-container">
+        <button class="back-btn" onclick="goHome()">← Back to Store</button>
+
+        <div class="profile-page-header" id="profileHeader">
+            <div class="profile-big-avatar" id="profileBigInitial">U</div>
+            <div>
+                <h1 id="profilePageName">My Account</h1>
+                <p id="profilePageEmail"></p>
+            </div>
+        </div>
+
+        <div class="profile-tabs" id="profileTabs">
+            <div class="profile-tab active" onclick="switchProfileTab('info')">👤 Personal Info</div>
+            <div class="profile-tab" onclick="switchProfileTab('payment')">💳 Payment</div>
+            <div class="profile-tab" onclick="switchProfileTab('appearance')">🎨 Appearance</div>
+            <div class="profile-tab" onclick="switchProfileTab('orders')">🧾 Orders</div>
+        </div>
+
+        <!-- Tab: Personal Info -->
+        <div class="profile-tab-content active" id="tab-info">
+            <div class="profile-card">
+                <h3>🙍 Basic Information</h3>
+                <div class="profile-form-grid">
+                    <div class="profile-field">
+                        <label>First Name</label>
+                        <input type="text" id="pFirstName" placeholder="John">
+                    </div>
+                    <div class="profile-field">
+                        <label>Last Name</label>
+                        <input type="text" id="pLastName" placeholder="Doe">
+                    </div>
+                    <div class="profile-field">
+                        <label>Date of Birth</label>
+                        <input type="date" id="pBirthday">
+                    </div>
+                    <div class="profile-field">
+                        <label>Phone Number</label>
+                        <input type="tel" id="pPhone" placeholder="+1 555 000 0000">
+                    </div>
+                    <div class="profile-field full-width">
+                        <label>Email</label>
+                        <input type="email" id="pEmail" placeholder="you@email.com">
+                    </div>
+                    <div class="profile-field full-width">
+                        <label>Country</label>
+                        <select id="pCountry">
+                            <option value="">Select country...</option>
+                            <option>United States</option>
+                            <option>United Kingdom</option>
+                            <option>Germany</option>
+                            <option>France</option>
+                            <option>Turkey</option>
+                            <option>Azerbaijan</option>
+                            <option>Russia</option>
+                            <option>Japan</option>
+                            <option>Canada</option>
+                            <option>Australia</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="profile-save-btn" onclick="savePersonalInfo()">💾 Save Changes</button>
+            </div>
+
+            <div class="profile-card">
+                <h3>🔒 Change Password</h3>
+                <div class="profile-form-grid">
+                    <div class="profile-field full-width">
+                        <label>Current Password</label>
+                        <input type="password" id="pOldPass" placeholder="••••••••">
+                    </div>
+                    <div class="profile-field">
+                        <label>New Password</label>
+                        <input type="password" id="pNewPass" placeholder="••••••••">
+                    </div>
+                    <div class="profile-field">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="pConfirmPass" placeholder="••••••••">
+                    </div>
+                </div>
+                <button class="profile-save-btn" onclick="changePassword()">🔑 Update Password</button>
+            </div>
+        </div>
+
+        <!-- Tab: Payment -->
+        <div class="profile-tab-content" id="tab-payment">
+            <div class="card-visual" id="cardVisual">
+                <div class="card-chip">💳</div>
+                <div class="card-number-display" id="cardNumDisplay">•••• •••• •••• ••••</div>
+                <div class="card-bottom">
+                    <div class="card-holder-display">CARD HOLDER<span id="cardHolderDisplay">YOUR NAME</span></div>
+                    <div class="card-expiry-display">EXPIRES<span id="cardExpiryDisplay">MM/YY</span></div>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <h3>➕ Add / Update Card</h3>
+                <div class="profile-form-grid">
+                    <div class="profile-field full-width">
+                        <label>Cardholder Name</label>
+                        <input type="text" id="cardHolder" placeholder="John Doe" oninput="updateCardPreview()">
+                    </div>
+                    <div class="profile-field full-width">
+                        <label>Card Number</label>
+                        <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCardNumber(this); updateCardPreview()">
+                    </div>
+                    <div class="profile-field">
+                        <label>Expiry Date (MM/YY)</label>
+                        <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this); updateCardPreview()">
+                    </div>
+                    <div class="profile-field">
+                        <label>CVV</label>
+                        <input type="password" id="cardCVV" placeholder="•••" maxlength="3">
+                    </div>
+                </div>
+                <button class="profile-save-btn" onclick="savePaymentInfo()">💾 Save Card</button>
+            </div>
+
+            <div class="profile-card" id="savedCardSection" style="display:none;">
+                <h3>✅ Saved Card</h3>
+                <div id="savedCardInfo" style="color:#b0b0b0; line-height:2;"></div>
+                <button class="profile-save-btn" style="background:transparent;border:1px solid #ff6b6b;color:#ff6b6b;margin-top:0.5rem;"
+                    onclick="removeCard()">🗑 Remove Card</button>
+            </div>
+        </div>
+
+        <!-- Tab: Appearance Settings -->
+        <div class="profile-tab-content" id="tab-appearance">
+            <div class="profile-card">
+                <h3>🎨 Appearance</h3>
+                <div class="profile-form-grid">
+                    <div class="profile-field full-width">
+                        <label>Theme</label>
+                        <select id="themeSelect" onchange="changeThemeFromSettings()">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div class="profile-field full-width">
+                        <label>Font Size</label>
+                        <select id="fontSizeSelect" onchange="changeFontSize()">
+                            <option value="medium">Standard</option>
+                            <option value="large">Large</option>
+                            <option value="small">Small</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Library / Downloads -->
+        <div class="profile-tab-content" id="tab-library">
+            <div id="libraryContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeLoginModal()">&times;</span>
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit" class="modal-btn">Login</button>
+        </form>
+        <div class="toggle-form">Don't have an account? <a onclick="switchToSignup()">Sign Up</a></div>
+    </div>
+</div>
+
+<!-- Signup Modal -->
+<div id="signupModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSignupModal()">&times;</span>
+        <h2>Create Account</h2>
+        <form id="signupForm">
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" id="signupName" required>
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="signupEmail" required>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="signupPassword" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password:</label>
+                <input type="password" id="signupConfirm" required>
+            </div>
+            <button type="submit" class="modal-btn">Sign Up</button>
+        </form>
+        <div class="toggle-form">Already have an account? <a onclick="switchToLogin()">Login</a></div>
+    </div>
+</div>
+
+<!-- Cart Sidebar -->
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+        <h2>Shopping Cart</h2>
+        <span class="close-cart" onclick="toggleCart()">&times;</span>
+    </div>
+    <div class="cart-items" id="cartItemsContainer">
+        <div class="cart-empty">Your cart is empty</div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-total">Total: <span class="amount" id="cartTotal">$0.00</span></div>
+        <button class="checkout-btn" onclick="checkout()">Checkout</button>
+    </div>
+</div>
+
+<script>
+const games = [
+    {
+        id: 1, title: "Grand Theft Auto V", genre: "Action/Adventure",
+        price: 59.99, originalPrice: 69.99, discount: 14,
+        description: "Experience the sprawling open world of Los Santos across three interconnected criminal protagonists — Michael, Trevor, and Franklin. With a massive story campaign and GTA Online offering endless multiplayer content, it remains one of the best-selling and most-played games ever made. Featuring a detailed living world, heists, sports, and constant online updates.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/header.jpg",
+        trending: true,
+        developer: "Rockstar Games", publisher: "Rockstar Games", releaseYear: "2013",
+        tags: ["Open World", "Heists", "Online Multiplayer", "Crime", "Driving"],
+        rating: 4.7, reviewCount: 3241
+    },
+    {
+        id: 2, title: "Valorant", genre: "Tactical Shooter",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Valorant is a free-to-play 5v5 character-based tactical shooter from Riot Games. Precise gunplay meets unique agent abilities in a competitive environment where every round matters. Choose from a roster of Agents — each with distinct powers — and combine strategy, sharp aim, and teamwork to outsmart your opponents.",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrSxEJnpj_P_ij0NW02iyjfMSx9COD9_9gEA&s",
+        trending: true,
+        developer: "Riot Games", publisher: "Riot Games", releaseYear: "2020",
+        tags: ["Free to Play", "Competitive", "Tactical", "5v5", "Agents"],
+        rating: 4.5, reviewCount: 5102
+    },
+    {
+        id: 3, title: "Minecraft", genre: "Sandbox/Building",
+        price: 26.95, originalPrice: null, discount: 0,
+        description: "Minecraft is the best-selling video game of all time. Explore procedurally generated worlds, gather resources, craft tools and weapons, build anything imaginable, and survive against hostile mobs. With Survival, Creative, Adventure, and Hardcore modes — plus an enormous modding community — there is always something new to discover.",
+        image: "https://cdn-dynmedia-1.microsoft.com/is/image/microsoftassets/minecraft-tiny-takeover-thumbnail",
+        trending: true,
+        developer: "Mojang Studios", publisher: "Microsoft", releaseYear: "2011",
+        tags: ["Sandbox", "Survival", "Creative", "Multiplayer", "Moddable"],
+        rating: 4.9, reviewCount: 8874
+    },
+    {
+        id: 4, title: "Apex Legends", genre: "Battle Royale",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Apex Legends is a free-to-play battle royale hero shooter set in the Titanfall universe. Choose a Legend with distinct abilities, form a squad of three, and fight to be the last team standing in fast-paced, ever-evolving arenas. Ziplines, jump pads, and fluid movement mechanics make every match feel dynamic.",
+        image: "https://media.contentapi.ea.com/content/dam/apex-legends/images/2024/04/apex-social-card.jpg",
+        trending: true,
+        developer: "Respawn Entertainment", publisher: "EA", releaseYear: "2019",
+        tags: ["Free to Play", "Battle Royale", "Hero Shooter", "Squads", "Seasonal"],
+        rating: 4.4, reviewCount: 4203
+    },
+    {
+        id: 5, title: "Fortnite", genre: "Battle Royale",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Fortnite is the free-to-play battle royale phenomenon featuring iconic building mechanics, seasonal story events, crossover collaborations, and a constantly evolving island. Jump from the Battle Bus, scavenge weapons, build structures for cover, and be the last player standing. Includes Save the World PvE and Creative sandbox modes.",
+        image: "https://cdn2.unrealengine.com/fortnite%2Fblog%2Ftitle%2FFortnite_Blog_Standardized_1920x1080-1920x1080-0968701631e0.jpg",
+        trending: true,
+        developer: "Epic Games", publisher: "Epic Games", releaseYear: "2017",
+        tags: ["Free to Play", "Battle Royale", "Building", "Seasonal Events", "Cross-platform"],
+        rating: 4.2, reviewCount: 9341
+    },
+    {
+        id: 6, title: "League of Legends", genre: "MOBA",
+        price: 0, originalPrice: null, discount: 0,
+        description: "League of Legends is Riot Games' iconic free-to-play MOBA. Two teams of five champions battle across three lanes to destroy the enemy Nexus. With over 160 champions, each with unique abilities, a deep item system, and a thriving esports scene, LoL offers one of the most strategic and competitive multiplayer experiences available.",
+        image: "https://www.leagueoflegends.com/static/open-graph-2e582ae9fae8b0b396ca46ff21fd47a.jpg",
+        trending: false,
+        developer: "Riot Games", publisher: "Riot Games", releaseYear: "2009",
+        tags: ["MOBA", "Free to Play", "Competitive", "Esports", "Strategy"],
+        rating: 4.3, reviewCount: 7102
+    },
+    {
+        id: 7, title: "Counter-Strike 2", genre: "Tactical Shooter",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Counter-Strike 2 is the free upgrade to CS:GO, rebuilt on the Source 2 engine. Featuring remastered maps, sub-tick servers for precise registration, and reworked smoke grenades that react to bullets and explosions. The definitive competitive FPS with decades of legacy and a passionate global community.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/header.jpg",
+        trending: true,
+        developer: "Valve", publisher: "Valve", releaseYear: "2023",
+        tags: ["Free to Play", "Competitive", "FPS", "Tactical", "Esports"],
+        rating: 4.6, reviewCount: 6831
+    },
+    {
+        id: 8, title: "Call of Duty: Modern Warfare III", genre: "First Person Shooter",
+        price: 69.99, originalPrice: 79.99, discount: 12,
+        description: "Modern Warfare III delivers a gripping campaign continuing the story of Task Force 141, a massive multiplayer mode featuring 16 classic Modern Warfare 2 maps, and Zombies — an open-world co-op survival experience. With 150 weapons and deep Gunsmith customization, it is the most ambitious COD multiplayer to date.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2867370/header.jpg",
+        trending: false,
+        developer: "Sledgehammer Games", publisher: "Activision", releaseYear: "2023",
+        tags: ["FPS", "Multiplayer", "Zombies", "Campaign", "Military"],
+        rating: 3.9, reviewCount: 2314
+    },
+    {
+        id: 9, title: "Elden Ring", genre: "Action RPG",
+        price: 59.99, originalPrice: 79.99, discount: 25,
+        description: "Elden Ring is FromSoftware's masterpiece — an open-world action RPG co-created with George R. R. Martin. Explore the shattered world of the Lands Between, battle demigods, uncover ancient lore, and forge your own path. Multiple endings, a massive optional underground world, PvP invasions, and co-op make it endlessly replayable.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg",
+        trending: false,
+        developer: "FromSoftware", publisher: "Bandai Namco", releaseYear: "2022",
+        tags: ["Open World", "Souls-like", "Dark Fantasy", "Challenging", "Co-op"],
+        rating: 4.9, reviewCount: 4102
+    },
+    {
+        id: 10, title: "Dark Souls III", genre: "Action RPG",
+        price: 39.99, originalPrice: 59.99, discount: 33,
+        description: "Dark Souls III is FromSoftware's fiery, spectacular conclusion to the Dark Souls trilogy. A dying world of ash and flame demands precision, patience, and mastery of its punishing but fair combat. Features the series' most polished boss encounters, a rich lore tapestry, and excellent PvP with the Undead Match mode.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/374320/header.jpg",
+        trending: false,
+        developer: "FromSoftware", publisher: "Bandai Namco", releaseYear: "2016",
+        tags: ["Souls-like", "Challenging", "Dark Fantasy", "PvP", "Boss Fights"],
+        rating: 4.8, reviewCount: 3567
+    },
+    {
+        id: 11, title: "The Witcher 3", genre: "Action RPG",
+        price: 39.99, originalPrice: 59.99, discount: 33,
+        description: "The Witcher 3: Wild Hunt is widely considered one of the greatest RPGs ever made. Play as Geralt of Rivia, a monster hunter for hire, in a breathtaking open world rich with meaningful choices, morally complex characters, and hundreds of hours of content. The Blood and Wine and Hearts of Stone expansions alone are worth the price of admission.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/292030/header.jpg",
+        trending: true,
+        developer: "CD Projekt Red", publisher: "CD Projekt", releaseYear: "2015",
+        tags: ["Open World", "Story-Rich", "Fantasy", "Choices Matter", "DLC Included"],
+        rating: 4.9, reviewCount: 6023
+    },
+    {
+        id: 12, title: "Cyberpunk 2077", genre: "Action RPG",
+        price: 49.99, originalPrice: 69.99, discount: 28,
+        description: "Cyberpunk 2077 is an open-world, action-adventure RPG set in Night City — a megalopolis obsessed with power, glamour, and body modification. Play as V and carve your own path through a neon-drenched dystopia. The Phantom Liberty expansion and 2.0 update transformed it into one of 2023's best RPGs.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg",
+        trending: false,
+        developer: "CD Projekt Red", publisher: "CD Projekt", releaseYear: "2020",
+        tags: ["Open World", "Cyberpunk", "Story-Rich", "FPS RPG", "Night City"],
+        rating: 4.6, reviewCount: 3882
+    },
+    {
+        id: 13, title: "Assassin's Creed Mirage", genre: "Action Adventure",
+        price: 54.99, originalPrice: 69.99, discount: 21,
+        description: "Assassin's Creed Mirage returns to the franchise's roots, following young Basim Ibn Ishaq through the bustling streets of 9th-century Baghdad. A focused stealth experience with a dense, authentic city to explore, assassination contracts, and a compelling origin story — a love letter to classic Assassin's Creed.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2242760/header.jpg",
+        trending: false,
+        developer: "Ubisoft Bordeaux", publisher: "Ubisoft", releaseYear: "2023",
+        tags: ["Stealth", "Historical", "Parkour", "Assassin", "Baghdad"],
+        rating: 4.1, reviewCount: 1432
+    },
+    {
+        id: 14, title: "Red Dead Redemption 2", genre: "Action Adventure",
+        price: 49.99, originalPrice: 69.99, discount: 28,
+        description: "Red Dead Redemption 2 is Rockstar's magnum opus — an epic tale of outlaws on the run in the dying days of the American frontier. Play as Arthur Morgan, a complex man of contradictions, in a world of unmatched detail and atmosphere. The story is one of the best in gaming, and Red Dead Online extends the experience.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/header.jpg",
+        trending: true,
+        developer: "Rockstar Games", publisher: "Rockstar Games", releaseYear: "2019",
+        tags: ["Open World", "Western", "Story-Rich", "Realistic", "Multiplayer"],
+        rating: 4.9, reviewCount: 5541
+    },
+    {
+        id: 15, title: "Halo Infinite", genre: "First Person Shooter",
+        price: 59.99, originalPrice: 79.99, discount: 25,
+        description: "Halo Infinite is the latest chapter in the legendary franchise, featuring Master Chief's most epic journey yet. The open-world campaign brings freedom to the Halo ring for the first time, while the free-to-play multiplayer delivers tight arena gameplay and fan-favourite Big Team Battle. The grappling hook changes everything.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1735800/header.jpg",
+        trending: false,
+        developer: "343 Industries", publisher: "Xbox Game Studios", releaseYear: "2021",
+        tags: ["FPS", "Sci-Fi", "Open World", "Campaign", "Arena Multiplayer"],
+        rating: 4.1, reviewCount: 1891
+    },
+    {
+        id: 16, title: "Overwatch 2", genre: "Team-Based Shooter",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Overwatch 2 is Blizzard's free-to-play hero shooter, rebuilt with reworked heroes, new maps, PvP modes, and a seasonal content model. 5v5 battles across Push, Control, Escort, and Flashpoint modes. With over 40 heroes spanning tank, damage, and support roles — creative team compositions are endless.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2357570/header.jpg",
+        trending: true,
+        developer: "Blizzard Entertainment", publisher: "Blizzard", releaseYear: "2022",
+        tags: ["Free to Play", "Hero Shooter", "Team-Based", "5v5", "Seasonal"],
+        rating: 3.8, reviewCount: 4112
+    },
+    {
+        id: 17, title: "Dota 2", genre: "MOBA",
+        price: 0, originalPrice: null, discount: 0,
+        description: "Dota 2 is Valve's free-to-play MOBA — the most complex and rewarding in the genre. 120+ heroes, thousands of item combinations, and a mechanical depth that takes years to master. Home to The International, one of the most prestigious and highest-prize-pool esports tournaments in the world.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/570/header.jpg",
+        trending: false,
+        developer: "Valve", publisher: "Valve", releaseYear: "2013",
+        tags: ["MOBA", "Free to Play", "Competitive", "Esports", "Strategy"],
+        rating: 4.4, reviewCount: 5902
+    },
+    {
+        id: 18, title: "Starfield", genre: "Action RPG",
+        price: 69.99, originalPrice: 79.99, discount: 12,
+        description: "Starfield is Bethesda's first new universe in 25 years. Explore over 1,000 planets across the settled systems as a member of Constellation — humanity's last great explorers. Build and crew your own ships, colonize outposts, unravel alien mysteries, and shape the fate of the galaxy through your choices.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1716740/header.jpg",
+        trending: true,
+        developer: "Bethesda Game Studios", publisher: "Xbox Game Studios", releaseYear: "2023",
+        tags: ["Space", "Open World", "RPG", "Ship Building", "Exploration"],
+        rating: 4.0, reviewCount: 2103
+    },
+    {
+        id: 19, title: "Final Fantasy XVI", genre: "Action RPG",
+        price: 59.99, originalPrice: 74.99, discount: 20,
+        description: "Final Fantasy XVI is the boldest entry in the legendary JRPG series — a dark, mature epic of warring kingdoms, enslaved Eikons, and a world choking on a poisonous Blight. Clive Rosfield's story is one of the most emotionally powerful in the franchise, backed by breathtaking Eikon clash set-pieces and a fast, rewarding combat system.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2505500/header.jpg",
+        trending: false,
+        developer: "Square Enix Creative Business Unit III", publisher: "Square Enix", releaseYear: "2023",
+        tags: ["JRPG", "Action Combat", "Fantasy", "Story-Rich", "Summons"],
+        rating: 4.5, reviewCount: 1784
+    },
+    {
+        id: 20, title: "Baldur's Gate 3", genre: "RPG",
+        price: 59.99, originalPrice: 74.99, discount: 20,
+        description: "Baldur's Gate 3 is Larian Studios' landmark RPG — widely regarded as one of the greatest games ever made. Based on D&D 5e rules, it features a deeply reactive world where nearly every choice matters, four full acts of story, 12 classes, 46 subclasses, online and split-screen co-op, and countless ways to solve every encounter.",
+        image: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1238140/header.jpg",
+        trending: true,
+        developer: "Larian Studios", publisher: "Larian Studios", releaseYear: "2023",
+        tags: ["D&D", "Turn-Based", "Co-op", "Choices Matter", "Fantasy"],
+        rating: 5.0, reviewCount: 7832
+    }
+];
+
+const seedComments = {
+    1: [{user:"GamerX99",rating:5,text:"The open world is still unmatched after all these years. Online keeps getting better too!",date:"2024-03-12"},{user:"StreetKing",rating:4,text:"Solid game but loading screens on PC can be annoying. Story is top tier.",date:"2024-01-05"}],
+    2: [{user:"TacticalPro",rating:5,text:"Best competitive shooter out there. Agent variety keeps the meta fresh every patch.",date:"2024-04-01"},{user:"SilverAim",rating:4,text:"Love it but ranked can be frustrating with smurfs. Otherwise a great game.",date:"2024-02-20"}],
+    3: [{user:"CrafterQueen",rating:5,text:"I've been playing this for 10 years and somehow still find new things to do. Timeless.",date:"2024-03-28"},{user:"BlockBuilder",rating:5,text:"My kids play it, I play it — the whole family loves it. Incredible.",date:"2024-01-15"}],
+    4: [{user:"BattleRoyaleFan",rating:5,text:"Movement and gunplay are the best in the BR genre. Legends system is genius.",date:"2024-04-05"},{user:"DropShot",rating:4,text:"Great game, just wish ranked was less punishing for solo players.",date:"2024-02-11"}],
+    5: [{user:"FortBuilder",rating:4,text:"Constant updates keep things fresh. Collabs are hit or miss but gameplay is solid.",date:"2024-03-19"},{user:"ChapterFan",rating:3,text:"Was better before building was removed from main mode but still fun.",date:"2024-01-28"}],
+    6: [{user:"MidLaner",rating:5,text:"13 years in and still the deepest MOBA around. New champion releases are exciting.",date:"2024-04-02"},{user:"JungleMain",rating:3,text:"Great game but the community can be toxic. Gameplay itself is unmatched.",date:"2024-02-14"}],
+    7: [{user:"CS_Veteran",rating:5,text:"CS2 feels incredible on Source 2. The smoke rework alone changed the game.",date:"2024-03-30"},{user:"AimTrainer",rating:4,text:"Best tactical FPS ever made. Premier mode finally gave us proper ranked.",date:"2024-01-21"}],
+    8: [{user:"COD_Fan",rating:4,text:"The classic MW2 maps in multiplayer make this worth it. Campaign is decent.",date:"2024-02-28"},{user:"SoldierPro",rating:3,text:"Feels like a map pack DLC but multiplayer hours add up quick.",date:"2024-01-09"}],
+    9: [{user:"TarnishedOne",rating:5,text:"FromSoftware's best work. Every area feels hand-crafted. Ranni quest alone deserves awards.",date:"2024-03-15"},{user:"SoulsMaster",rating:5,text:"The perfect open world souls game. Over 300 hours and still going.",date:"2024-01-30"}],
+    10: [{user:"DarkFan",rating:5,text:"Incredible bosses. Nameless King is still my favorite fight in all of gaming.",date:"2024-03-22"},{user:"ToughGamer",rating:4,text:"Challenging but deeply rewarding. Best PvP in the series.",date:"2024-02-03"}],
+    11: [{user:"GeraltFan",rating:5,text:"Still the GOAT open world RPG. The writing is on another level.",date:"2024-04-08"},{user:"WitcherNerd",rating:5,text:"Played it 5 times. It never gets old. Hearts of Stone is a 10/10.",date:"2024-02-27"}],
+    12: [{user:"NightCity",rating:5,text:"After the 2.0 update and Phantom Liberty it's a completely different game. Masterpiece.",date:"2024-03-07"},{user:"V_Build",rating:4,text:"Wish it launched in this state but what exists now is phenomenal.",date:"2024-01-18"}],
+    13: [{user:"AssassinFan",rating:4,text:"Great return to form. Baghdad is stunning and the stealth mechanics are back.",date:"2024-02-22"},{user:"ParkourKing",rating:4,text:"Short but focused. Exactly what the series needed after Odyssey bloat.",date:"2024-01-13"}],
+    14: [{user:"CowboyGamer",rating:5,text:"Arthur Morgan is the best protagonist in video game history. Perfect game.",date:"2024-04-10"},{user:"WildWest",rating:5,text:"The detail in this world is unreal. 200+ hours and loved every minute.",date:"2024-03-01"}],
+    15: [{user:"SpaceMarines",rating:4,text:"Grapple hook changes everything. Open world Halo felt weird at first but works.",date:"2024-02-18"},{user:"MasterChief",rating:4,text:"Multiplayer is incredibly fun. Campaign felt shorter than expected but still quality.",date:"2024-01-08"}],
+    16: [{user:"HeroMain",rating:4,text:"Love the hero variety. F2P model is generous enough for casuals.",date:"2024-03-25"},{user:"TeamPlayer",rating:3,text:"Fun with friends, painful solo queue. Hero balance needs more attention.",date:"2024-01-24"}],
+    17: [{user:"DotaLord",rating:5,text:"10,000+ hours and still learning. No other game comes close for strategic depth.",date:"2024-04-07"},{user:"CarryPlayer",rating:4,text:"Brutal learning curve but unmatched satisfaction when you get good.",date:"2024-02-06"}],
+    18: [{user:"SpaceExplorer",rating:4,text:"Massive universe to explore. Ship building is genuinely addictive.",date:"2024-03-18"},{user:"BethesdaFan",rating:3,text:"Great bones but feels empty vs other Bethesda worlds. Still enjoyable.",date:"2024-01-27"}],
+    19: [{user:"FFLegend",rating:5,text:"Clive's story made me cry. Best Final Fantasy in years. Eikon fights are INSANE.",date:"2024-03-11"},{user:"JRPGPro",rating:4,text:"The combat is super satisfying once it clicks. Visually stunning.",date:"2024-01-16"}],
+    20: [{user:"D&DFan",rating:5,text:"The greatest RPG ever made. Full stop. Act 2 alone is worth the price.",date:"2024-04-09"},{user:"LoreMaster",rating:5,text:"I've played 5 different builds and each felt completely different. Incredible.",date:"2024-02-25"}]
+};
+
+let cart = [], ownedGames = [], currentUser = null, currentGameId = null, selectedRating = 0;
+let wishlist = JSON.parse(localStorage.getItem('vnpWishlist')) || [];
+let watchlist = JSON.parse(localStorage.getItem('vnpWatchlist')) || [];
+let orderHistory = JSON.parse(localStorage.getItem('vnpOrders')) || [];
+let currentSearch = '';
+let filters = { genre: 'all', price: 'all', sort: 'relevance' };
+let fontSize = localStorage.getItem('vnpFontSize') || 'medium';
+let users = JSON.parse(localStorage.getItem('vnpUsers')) || [];
+if (!Array.isArray(users) || users.length === 0) {
+    users = [{ name: 'Admin', email: 'admin@vnp.com', password: 'admin123', isAdmin: true }];
+    localStorage.setItem('vnpUsers', JSON.stringify(users));
+}
+let userComments = JSON.parse(localStorage.getItem('vnpComments')) || {};
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadSavedGames(); renderGames(); loadUserSession(); setupEventListeners(); populateGenreOptions(); renderRecommendations(); renderWishlist(); renderOrderHistory(); updateSearchSuggestions(); applyTheme(); applyFontSize();
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+            applySearch(e.target.value.toLowerCase());
+        });
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applySearch(e.target.value.toLowerCase());
+            }
+        });
+    }
+    if (searchButton) {
+        searchButton.addEventListener('click', function () {
+            applySearch(searchInput.value.toLowerCase());
+        });
+    }
+});
+
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+function goHome() { showPage('storePage'); currentGameId = null; }
+
+function getFilteredGames() {
+    return games
+        .filter(game => {
+            const text = buildSearchText(game);
+            const matchesSearch = !currentSearch || text.includes(currentSearch);
+            const matchesGenre = filters.genre === 'all' || game.genre === filters.genre;
+            const matchesPrice = filters.price === 'all'
+                || (filters.price === 'free' && game.price === 0)
+                || (filters.price === 'paid' && game.price > 0);
+            return matchesSearch && matchesGenre && matchesPrice;
+        })
+        .sort((a, b) => {
+            if (filters.sort === 'rating') return b.rating - a.rating;
+            if (filters.sort === 'priceAsc') return a.price - b.price;
+            if (filters.sort === 'priceDesc') return b.price - a.price;
+            if (filters.sort === 'newest') return parseInt(b.releaseYear) - parseInt(a.releaseYear);
+            return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
+        });
+}
+
+function renderGames() {
+    const filtered = getFilteredGames();
+    const trending = filtered.filter(g => g.trending);
+    document.getElementById('gamesGrid').innerHTML = trending.map(createGameCard).join('');
+    document.getElementById('allGamesGrid').innerHTML = filtered.map(createGameCard).join('');
+    updateSearchTitle(currentSearch);
+}
+
+function createGameCard(game) {
+    const isOwned = ownedGames.includes(game.id);
+    const isWishlisted = wishlist.includes(game.id);
+    const isWatched = watchlist.includes(game.id);
+    return `
+        <div class="game-card">
+            <div class="game-image" id="img-${game.id}">
+                <img src="${game.image}" alt="${game.title}"
+                    onerror="document.getElementById('img-${game.id}').innerHTML='<div class=\\'game-fallback\\'>${game.title}</div>'">
+            </div>
+            <div class="game-info">
+                <div class="game-title-link" onclick="openGameDetail(${game.id})">${game.title}</div>
+                <div class="game-genre">${game.genre}</div>
+                <div class="recommendation-title">
+                    <span class="wishlist-badge">${isWishlisted ? '❤️ In Wishlist' : '🤍 Wishlist'}</span>
+                    <span class="wishlist-badge">${isWatched ? '👁 Watching' : '👀 Watch'}</span>
+                </div>
+                <div class="game-description">${game.description.substring(0, 90)}...</div>
+                <div class="game-price">
+                    ${game.discount > 0 ? `<span class="original-price">$${game.originalPrice}</span>` : ''}
+                    ${game.price === 0 ? '<span style="color:var(--accent)">Free to Play</span>' : `$${game.price.toFixed(2)}`}
+                    ${game.discount > 0 ? `<span class="discount-badge">-${game.discount}%</span>` : ''}
+                </div>
+                <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.8rem;">
+                    <button class="btn btn-login" style="flex:1;min-width:120px;" onclick="toggleWishlist(${game.id})">${isWishlisted ? 'Remove Wishlist' : 'Add Wishlist'}</button>
+                    <button class="btn btn-login" style="flex:1;min-width:120px;" onclick="toggleWatchlist(${game.id})">${isWatched ? 'Stop Watch' : 'Watch Price'}</button>
+                </div>
+                <button class="btn-buy ${isOwned ? 'btn-owned' : ''}"
+                    onclick="addToCart(${game.id}, '${game.title.replace(/'/g,"\\'")}', ${game.price})"
+                    ${isOwned ? 'disabled' : ''}>
+                    ${isOwned ? '✓ Owned' : 'Buy Now'}
+                </button>
+            </div>
+        </div>`;
+}
+
+function openGameDetail(gameId) {
+    const game = games.find(g => g.id === gameId);
+    if (!game) return;
+    currentGameId = gameId;
+
+    const cover = document.getElementById('detailCover');
+    cover.innerHTML = `<img src="${game.image}" alt="${game.title}"
+        onerror="this.parentElement.innerHTML='<div class=\\'fallback-large\\'>${game.title}</div>'">`;
+
+    document.getElementById('detailTitle').textContent = game.title;
+    document.getElementById('detailGenre').textContent = game.genre;
+
+    const priceRow = document.getElementById('detailPriceRow');
+    if (game.price === 0) {
+        priceRow.innerHTML = `<span class="detail-price" style="font-size:1.6rem">Free to Play</span>`;
+    } else {
+        priceRow.innerHTML = `
+            ${game.originalPrice ? `<span class="detail-original">$${game.originalPrice}</span>` : ''}
+            <span class="detail-price">$${game.price.toFixed(2)}</span>
+            ${game.discount > 0 ? `<span class="detail-discount">-${game.discount}%</span>` : ''}`;
+    }
+
+    document.getElementById('detailMeta').innerHTML = `
+        <div class="meta-item"><div class="meta-label">Developer</div><div class="meta-value">${game.developer}</div></div>
+        <div class="meta-item"><div class="meta-label">Publisher</div><div class="meta-value">${game.publisher}</div></div>
+        <div class="meta-item"><div class="meta-label">Release Year</div><div class="meta-value">${game.releaseYear}</div></div>
+        <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-value">${game.genre}</div></div>`;
+
+    const isOwned = ownedGames.includes(game.id);
+    const btn = document.getElementById('detailBuyBtn');
+    btn.textContent = isOwned ? '✓ Already Owned' : game.price === 0 ? 'Add to Library (Free)' : `Buy for $${game.price.toFixed(2)}`;
+    btn.className = 'detail-buy-btn' + (isOwned ? ' owned' : '');
+    btn.onclick = isOwned ? null : () => addToCart(game.id, game.title, game.price);
+    btn.disabled = isOwned;
+
+    document.getElementById('detailDescription').textContent = game.description;
+    document.getElementById('detailTags').innerHTML = (game.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+
+    renderRatingSummary(game);
+    renderComments(game.id);
+    selectedRating = 0;
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.remove('active'));
+    showPage('detailPage');
+}
+
+function renderRatingSummary(game) {
+    const allComments = getAllComments(game.id);
+    let avg = game.rating, total = game.reviewCount;
+    const dist = {5: Math.round(total*0.6), 4: Math.round(total*0.25), 3: Math.round(total*0.1), 2: Math.round(total*0.03), 1: Math.round(total*0.02)};
+    allComments.filter(c => c.rating).forEach(c => { dist[c.rating] = (dist[c.rating] || 0) + 1; total++; });
+    const userRatings = allComments.filter(c => c.rating);
+    if (userRatings.length > 0) {
+        avg = Math.round(((game.rating * game.reviewCount) + userRatings.reduce((a,c) => a + c.rating, 0)) / (game.reviewCount + userRatings.length) * 10) / 10;
+    }
+    const starsHtml = [1,2,3,4,5].map(i => `<span class="star ${i <= Math.round(avg) ? '' : 'empty'}">★</span>`).join('');
+    document.getElementById('ratingSummary').innerHTML = `
+        <div class="big-rating">
+            <div class="number">${avg.toFixed(1)}</div>
+            <div class="stars">${starsHtml}</div>
+            <div class="out-of">out of 5</div>
+            <div class="count">${total.toLocaleString()} reviews</div>
+        </div>
+        <div class="rating-bars">
+            ${[5,4,3,2,1].map(n => {
+                const pct = total > 0 ? Math.round((dist[n]/total)*100) : 0;
+                return `<div class="rating-bar-row">
+                    <span class="label">${n} ★</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+                    <span class="pct">${pct}%</span>
+                </div>`;
+            }).join('')}
+        </div>`;
+}
+
+function getAllComments(gameId) {
+    return [...(seedComments[gameId] || []).map(c => ({...c, seeded:true})), ...(userComments[gameId] || [])];
+}
+
+function renderComments(gameId) {
+    const sortMode = document.getElementById('commentSort')?.value || 'newest';
+    let all = getAllComments(gameId);
+    if (sortMode === 'top') {
+        all = all.slice().sort((a,b) => (b.rating || 0) - (a.rating || 0));
+    } else {
+        all = all.slice().sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }
+    const list = document.getElementById('commentsList');
+    if (all.length === 0) { list.innerHTML = '<div class="no-comments">No reviews yet. Be the first!</div>'; return; }
+    list.innerHTML = all.map(c => {
+        const stars = [1,2,3,4,5].map(i => `<span class="star ${i <= (c.rating||0) ? '' : 'empty'}">★</span>`).join('');
+        return `<div class="comment-card">
+            <div class="comment-header">
+                <div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>
+                <div class="comment-meta">
+                    <div class="comment-author">${c.user}</div>
+                    <div class="comment-date">${c.date || ''}</div>
+                </div>
+                <div class="stars">${stars}</div>
+            </div>
+            <div class="comment-text">${c.text}</div>
+        </div>`;
+    }).join('');
+}
+
+function setRating(val) {
+    selectedRating = val;
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= val));
+}
+
+function submitComment() {
+    if (!currentUser) { showNotification('Please login to post a review!'); openLoginModal(); return; }
+    const text = document.getElementById('commentText').value.trim();
+    if (!text) { showNotification('Please write something first!'); return; }
+    if (!selectedRating) { showNotification('Please select a star rating!'); return; }
+    const comment = { user: currentUser.name, rating: selectedRating, text, date: new Date().toISOString().split('T')[0] };
+    if (!userComments[currentGameId]) userComments[currentGameId] = [];
+    userComments[currentGameId].unshift(comment);
+    localStorage.setItem('vnpComments', JSON.stringify(userComments));
+    document.getElementById('commentText').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.remove('active'));
+    renderComments(currentGameId);
+    renderRatingSummary(games.find(g => g.id === currentGameId));
+    showNotification('Review posted!');
+}
+
+function openLoginModal() { if (currentUser) { showNotification('Already logged in!'); return; } document.getElementById('loginModal').style.display = 'block'; }
+function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+function openSignupModal() { if (currentUser) { showNotification('Already logged in!'); return; } document.getElementById('signupModal').style.display = 'block'; }
+function closeSignupModal() { document.getElementById('signupModal').style.display = 'none'; }
+function switchToSignup() { closeLoginModal(); openSignupModal(); }
+function switchToLogin() { closeSignupModal(); openLoginModal(); }
+
+document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+        currentUser = { email: user.email, name: user.name, isAdmin: !!user.isAdmin };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        updateAuthUI(); closeLoginModal();
+        showNotification(`Welcome back, ${user.name}!`);
+        this.reset();
+    } else { showNotification('Invalid credentials!'); }
+});
+
+document.getElementById('signupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+    if (password !== confirm) { showNotification('Passwords do not match!'); return; }
+    if (users.find(u => u.email === email)) { showNotification('Email already registered!'); return; }
+    users.push({ name, email, password });
+    localStorage.setItem('vnpUsers', JSON.stringify(users));
+    currentUser = { email, name };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    updateAuthUI(); closeSignupModal();
+    showNotification(`Welcome to VnP, ${name}!`);
+    this.reset();
+});
+
+function logout() {
+    currentUser = null; localStorage.removeItem('currentUser');
+    cart = []; updateAuthUI(); updateCart();
+    closeProfileDropdown();
+    showNotification('Logged out successfully!');
+    goHome();
+}
+
+function downloadApp() {
+    showNotification('📥 Downloading VnP App Installer v1.0.0');
+    const link = document.createElement('a');
+    link.href = 'data:application/octet-stream;base64,VVhm';
+    link.download = 'VnP-Setup-1.0.0.exe';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+function updateAuthUI() {
+    const logged = !!currentUser;
+    document.getElementById('authButtons').style.display = logged ? 'none' : 'flex';
+    document.getElementById('userProfile').style.display = logged ? 'flex' : 'none';
+    if (logged) document.getElementById('userInitial').textContent = currentUser.name.charAt(0).toUpperCase();
+}
+
+function loadUserSession() {
+    const stored = localStorage.getItem('currentUser');
+    if (stored) {
+        currentUser = JSON.parse(stored);
+        const user = users.find(u => u.email === currentUser.email);
+        if (user && user.isAdmin) currentUser.isAdmin = true;
+        updateAuthUI();
+    }
+}
+
+function addToCart(gameId, title, price) {
+    if (!currentUser) { showNotification('Please login first!'); openLoginModal(); return; }
+    if (ownedGames.includes(gameId)) { showNotification('You already own this game!'); return; }
+    cart.push({ id: gameId, title, price });
+    ownedGames.push(gameId);
+    updateCart(); showNotification(`${title} added to cart!`);
+    renderGames();
+    if (currentGameId === gameId) {
+        const btn = document.getElementById('detailBuyBtn');
+        btn.textContent = '✓ Already Owned';
+        btn.className = 'detail-buy-btn owned';
+        btn.disabled = true;
+    }
+}
+
+function removeFromCart(gameId) {
+    cart = cart.filter(i => i.id !== gameId);
+    ownedGames = ownedGames.filter(i => i !== gameId);
+    updateCart(); renderGames();
+}
+
+function updateCart() {
+    document.getElementById('cartCount').textContent = cart.length;
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+    const c = document.getElementById('cartItemsContainer');
+    c.innerHTML = cart.length === 0
+        ? '<div class="cart-empty">Your cart is empty</div>'
+        : cart.map(item => `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.title}</div>
+                    <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+                </div>
+                <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+            </div>`).join('');
+}
+
+function toggleCart() { document.getElementById('cartSidebar').classList.toggle('active'); }
+
+function checkout() {
+    if (cart.length === 0) { showNotification('Your cart is empty!'); return; }
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    const order = {
+        id: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        items: [...cart],
+        total,
+        status: 'Completed'
+    };
+    addOrder(order);
+    showNotification(`✓ Purchase successful! Total: $${total.toFixed(2)}`);
+    cart = []; updateCart();
+    document.getElementById('cartSidebar').classList.remove('active');
+    renderGames();
+}
+
+function buildSearchText(game) {
+    return [
+        game.title,
+        game.genre,
+        game.description,
+        game.developer,
+        game.publisher,
+        (game.tags || []).join(' ')
+    ].join(' ').toLowerCase();
+}
+
+function populateGenreOptions() {
+    const select = document.getElementById('genreFilter');
+    if (!select) return;
+    const current = select.value || 'all';
+    select.innerHTML = '<option value="all">All Genres</option>';
+    const genres = [...new Set(games.map(g => g.genre))].sort();
+    genres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre;
+        option.textContent = genre;
+        select.appendChild(option);
+    });
+    if (genres.includes(current)) select.value = current;
+}
+
+function updateSearchSuggestions() {
+    const datalist = document.getElementById('searchSuggestions');
+    if (!datalist) return;
+    datalist.innerHTML = games
+        .filter(game => buildSearchText(game).includes(currentSearch || ''))
+        .slice(0, 7)
+        .map(game => `<option value="${game.title}"></option>`)
+        .join('');
+}
+
+function toggleWishlist(gameId) {
+    if (!currentUser) { showNotification('Please login first!'); openLoginModal(); return; }
+    if (wishlist.includes(gameId)) {
+        wishlist = wishlist.filter(id => id !== gameId);
+        showNotification('Removed from wishlist');
+    } else {
+        wishlist.push(gameId);
+        showNotification('Added to wishlist');
+    }
+    localStorage.setItem('vnpWishlist', JSON.stringify(wishlist));
+    renderWishlist(); renderGames(); renderRecommendations();
+}
+
+function toggleWatchlist(gameId) {
+    if (!currentUser) { showNotification('Please login first!'); openLoginModal(); return; }
+    if (watchlist.includes(gameId)) {
+        watchlist = watchlist.filter(id => id !== gameId);
+        showNotification('Removed from watchlist');
+    } else {
+        watchlist.push(gameId);
+        showNotification('Watching for sales');
+    }
+    localStorage.setItem('vnpWatchlist', JSON.stringify(watchlist));
+    renderGames(); renderRecommendations();
+}
+
+function renderWishlist() {
+    const container = document.getElementById('wishlistGrid');
+    if (!container) return;
+    const gamesInWishlist = games.filter(g => wishlist.includes(g.id));
+    if (gamesInWishlist.length === 0) {
+        container.innerHTML = `<div class="empty-library"><p>Your wishlist is empty.</p><p style="margin-top:0.5rem"><a onclick="goHome()">Browse the store</a> to add titles.</p></div>`;
+        return;
+    }
+    container.innerHTML = gamesInWishlist.map(createGameCard).join('');
+}
+
+function getRecommendedGames() {
+    const available = games.filter(g => !ownedGames.includes(g.id));
+    const favorites = available.filter(g => wishlist.includes(g.id));
+    const base = favorites.length ? favorites : available;
+    return base
+        .sort((a, b) => (b.rating - a.rating) || (b.discount - a.discount))
+        .slice(0, 6);
+}
+
+function renderRecommendations() {
+    const container = document.getElementById('recommendationsGrid');
+    if (!container) return;
+    const recommendations = getRecommendedGames();
+    if (recommendations.length === 0) {
+        container.innerHTML = `<div class="empty-library">No recommendations available right now.</div>`;
+        return;
+    }
+    container.innerHTML = recommendations.map(createGameCard).join('');
+}
+
+function renderOrderHistory() {
+    const content = document.getElementById('orderHistoryContent');
+    if (!content) return;
+    if (orderHistory.length === 0) {
+        content.innerHTML = `<div class="order-item"><p>No orders yet. Checkout a game to see it here.</p></div>`;
+        return;
+    }
+    content.innerHTML = orderHistory.map(order => {
+        const items = order.items.map(item => `<div>${item.title} — $${item.price.toFixed(2)}</div>`).join('');
+        return `<div class="order-item">
+            <div class="order-item-header">
+                <div><strong>Order #${order.id}</strong></div>
+                <div>${order.date}</div>
+            </div>
+            <div class="order-item-meta">
+                <div><strong>Status:</strong> ${order.status}</div>
+                <div><strong>Items:</strong> ${order.items.length}</div>
+                <div><strong>Total:</strong> $${order.total.toFixed(2)}</div>
+            </div>
+            <div style="margin-top:0.8rem">${items}</div>
+        </div>`;
+    }).join('');
+}
+
+function addOrder(order) {
+    orderHistory.unshift(order);
+    localStorage.setItem('vnpOrders', JSON.stringify(orderHistory));
+    renderOrderHistory();
+}
+
+function applyFilters() {
+    filters.genre = document.getElementById('genreFilter').value;
+    filters.price = document.getElementById('priceFilter').value;
+    filters.sort = document.getElementById('sortSelect').value;
+    renderGames();
+}
+
+function resetFilters() {
+    filters = { genre: 'all', price: 'all', sort: 'relevance' };
+    document.getElementById('genreFilter').value = 'all';
+    document.getElementById('priceFilter').value = 'all';
+    document.getElementById('sortSelect').value = 'relevance';
+    currentSearch = '';
+    document.getElementById('searchInput').value = '';
+    renderGames();
+    updateSearchSuggestions();
+}
+
+function loadSavedGames() {
+    const saved = localStorage.getItem('vnpGames');
+    if (!saved) return;
+    try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) games = parsed;
+    } catch (e) {
+        console.warn('Unable to load saved games', e);
+    }
+}
+
+function saveGames() {
+    localStorage.setItem('vnpGames', JSON.stringify(games));
+}
+
+function applyTheme() {
+    const saved = localStorage.getItem('vnpTheme') || 'light';
+    if (saved === 'dark') {
+        document.body.classList.add('theme-dark');
+        document.getElementById('themeToggle').textContent = '☀️';
+    } else {
+        document.body.classList.remove('theme-dark');
+        document.getElementById('themeToggle').textContent = '🌙';
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('theme-dark');
+    localStorage.setItem('vnpTheme', isDark ? 'dark' : 'light');
+    document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+function applyFontSize() {
+    document.body.classList.remove('font-small', 'font-large');
+    if (fontSize === 'small') document.body.classList.add('font-small');
+    if (fontSize === 'large') document.body.classList.add('font-large');
+    const select = document.getElementById('fontSizeSelect');
+    if (select) select.value = fontSize;
+}
+
+function applyAppearanceSettings() {
+    const themeSelect = document.getElementById('themeSelect');
+    const fontSelect = document.getElementById('fontSizeSelect');
+    const savedTheme = localStorage.getItem('vnpTheme') || 'light';
+    const savedFont = localStorage.getItem('vnpFontSize') || 'medium';
+    if (themeSelect) themeSelect.value = savedTheme;
+    if (fontSelect) fontSelect.value = savedFont;
+    fontSize = savedFont;
+    applyFontSize();
+}
+
+function changeThemeFromSettings() {
+    const selected = document.getElementById('themeSelect').value;
+    localStorage.setItem('vnpTheme', selected);
+    applyTheme();
+}
+
+function changeFontSize() {
+    fontSize = document.getElementById('fontSizeSelect').value;
+    localStorage.setItem('vnpFontSize', fontSize);
+    applyFontSize();
+}
+
+function applySearch(term) {
+    currentSearch = term.trim().toLowerCase();
+    const trendingSection = document.getElementById('trendingSection');
+    if (!currentSearch) {
+        if (trendingSection) trendingSection.style.display = '';
+        updateSearchTitle('');
+        renderGames();
+        goHome();
+        return;
+    }
+    if (trendingSection) trendingSection.style.display = 'none';
+    renderGames();
+    updateSearchTitle(currentSearch);
+    showPage('storePage');
+    updateSearchSuggestions();
+}
+
+function updateSearchTitle(term) {
+    const title = document.getElementById('allGamesTitle');
+    if (!title) return;
+    title.textContent = term ? `🔎 Search Results for "${term}"` : '🎮 All Games';
+}
+
+function showNotification(msg) {
+    const n = document.createElement('div');
+    n.className = 'notification'; n.textContent = msg;
+    document.body.appendChild(n);
+    setTimeout(() => { n.style.animation = 'slideUp 0.3s ease reverse'; setTimeout(() => n.remove(), 300); }, 3000);
+}
+
+/* ── PROFILE DROPDOWN ── */
+function toggleProfileDropdown() {
+    document.getElementById('profileDropdown').classList.toggle('open');
+}
+function closeProfileDropdown() {
+    document.getElementById('profileDropdown').classList.remove('open');
+}
+
+/* ── PROFILE PAGE ── */
+function openProfilePage(tab) {
+    if (!currentUser) { showNotification('Please login first!'); openLoginModal(); return; }
+    closeProfileDropdown();
+    const isLibraryOnly = tab === 'library';
+    document.getElementById('profileTabs').style.display = isLibraryOnly ? 'none' : 'flex';
+    document.getElementById('profileHeader').style.display = isLibraryOnly ? 'none' : 'block';
+    if (!isLibraryOnly) {
+        document.getElementById('profileBigInitial').textContent = currentUser.name.charAt(0).toUpperCase();
+        document.getElementById('profilePageName').textContent = currentUser.name;
+        document.getElementById('profilePageEmail').textContent = currentUser.email;
+        const saved = JSON.parse(localStorage.getItem('vnpProfile_' + currentUser.email) || '{}');
+        document.getElementById('pFirstName').value = saved.firstName || '';
+        document.getElementById('pLastName').value = saved.lastName || '';
+        document.getElementById('pBirthday').value = saved.birthday || '';
+        document.getElementById('pPhone').value = saved.phone || '';
+        document.getElementById('pEmail').value = saved.email || currentUser.email;
+        document.getElementById('pCountry').value = saved.country || '';
+        const savedCard = JSON.parse(localStorage.getItem('vnpCard_' + currentUser.email) || 'null');
+        if (savedCard) {
+            document.getElementById('savedCardSection').style.display = 'block';
+            document.getElementById('savedCardInfo').innerHTML =
+                `<strong>Card:</strong> •••• •••• •••• ${savedCard.last4}<br>
+                 <strong>Holder:</strong> ${savedCard.holder}<br>
+                 <strong>Expires:</strong> ${savedCard.expiry}`;
+            document.getElementById('cardNumDisplay').textContent = `•••• •••• •••• ${savedCard.last4}`;
+            document.getElementById('cardHolderDisplay').textContent = savedCard.holder;
+            document.getElementById('cardExpiryDisplay').textContent = savedCard.expiry;
+        } else {
+            document.getElementById('savedCardSection').style.display = 'none';
+            document.getElementById('cardNumDisplay').textContent = '•••• •••• •••• ••••';
+            document.getElementById('cardHolderDisplay').textContent = 'YOUR NAME';
+            document.getElementById('cardExpiryDisplay').textContent = 'MM/YY';
+        }
+        document.getElementById('cardHolder').value = '';
+        document.getElementById('cardNumber').value = '';
+        document.getElementById('cardExpiry').value = '';
+        document.getElementById('cardCVV').value = '';
+    }
+    if (tab === 'orders') renderOrderHistory();
+    switchProfileTab(tab || 'info');
+    showPage('profilePage');
+}
+
+function switchProfileTab(tab) {
+    document.querySelectorAll('.profile-tab').forEach((t, i) => {
+        const tabs = ['info','payment','appearance','orders'];
+        t.classList.toggle('active', tabs[i] === tab);
+    });
+    document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
+    const tabContent = document.getElementById('tab-' + tab);
+    if (tabContent) tabContent.classList.add('active');
+    if (tab === 'library') renderLibrary();
+    if (tab === 'orders') renderOrderHistory();
+}
+
+function savePersonalInfo() {
+    if (!currentUser) return;
+    const data = {
+        firstName: document.getElementById('pFirstName').value,
+        lastName: document.getElementById('pLastName').value,
+        birthday: document.getElementById('pBirthday').value,
+        phone: document.getElementById('pPhone').value,
+        email: document.getElementById('pEmail').value,
+        country: document.getElementById('pCountry').value
+    };
+    localStorage.setItem('vnpProfile_' + currentUser.email, JSON.stringify(data));
+    showNotification('✅ Personal info saved!');
+}
+
+function changePassword() {
+    if (!currentUser) return;
+    const oldPass = document.getElementById('pOldPass').value;
+    const newPass = document.getElementById('pNewPass').value;
+    const confirmPass = document.getElementById('pConfirmPass').value;
+    const userIdx = users.findIndex(u => u.email === currentUser.email);
+    if (userIdx === -1) { showNotification('User not found.'); return; }
+    if (users[userIdx].password !== oldPass) { showNotification('❌ Current password is incorrect!'); return; }
+    if (newPass.length < 6) { showNotification('❌ New password must be at least 6 characters.'); return; }
+    if (newPass !== confirmPass) { showNotification('❌ New passwords do not match!'); return; }
+    users[userIdx].password = newPass;
+    localStorage.setItem('vnpUsers', JSON.stringify(users));
+    document.getElementById('pOldPass').value = '';
+    document.getElementById('pNewPass').value = '';
+    document.getElementById('pConfirmPass').value = '';
+    showNotification('✅ Password updated successfully!');
+}
+
+function updateCardPreview() {
+    const num = document.getElementById('cardNumber').value || '';
+    const holder = document.getElementById('cardHolder').value || '';
+    const expiry = document.getElementById('cardExpiry').value || '';
+    document.getElementById('cardNumDisplay').textContent = num.length > 0 ? num.padEnd(19, '•').substring(0,19) : '•••• •••• •••• ••••';
+    document.getElementById('cardHolderDisplay').textContent = holder.toUpperCase() || 'YOUR NAME';
+    document.getElementById('cardExpiryDisplay').textContent = expiry || 'MM/YY';
+}
+
+function formatCardNumber(input) {
+    let v = input.value.replace(/\D/g,'').substring(0,16);
+    input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function formatExpiry(input) {
+    let v = input.value.replace(/\D/g,'').substring(0,4);
+    if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2);
+    input.value = v;
+}
+
+function savePaymentInfo() {
+    if (!currentUser) return;
+    const holder = document.getElementById('cardHolder').value.trim();
+    const number = document.getElementById('cardNumber').value.replace(/\s/g,'');
+    const expiry = document.getElementById('cardExpiry').value.trim();
+    const cvv = document.getElementById('cardCVV').value.trim();
+    if (!holder || number.length < 16 || !expiry || cvv.length < 3) {
+        showNotification('❌ Please fill in all card fields correctly.'); return;
+    }
+    const last4 = number.slice(-4);
+    const cardData = { holder, last4, expiry };
+    localStorage.setItem('vnpCard_' + currentUser.email, JSON.stringify(cardData));
+    document.getElementById('savedCardSection').style.display = 'block';
+    document.getElementById('savedCardInfo').innerHTML =
+        `<strong>Card:</strong> •••• •••• •••• ${last4}<br>
+         <strong>Holder:</strong> ${holder}<br>
+         <strong>Expires:</strong> ${expiry}`;
+    document.getElementById('cardNumDisplay').textContent = `•••• •••• •••• ${last4}`;
+    document.getElementById('cardHolderDisplay').textContent = holder.toUpperCase();
+    document.getElementById('cardExpiryDisplay').textContent = expiry;
+    document.getElementById('cardNumber').value = '';
+    document.getElementById('cardCVV').value = '';
+    showNotification('✅ Card saved securely!');
+}
+
+function removeCard() {
+    if (!currentUser) return;
+    localStorage.removeItem('vnpCard_' + currentUser.email);
+    document.getElementById('savedCardSection').style.display = 'none';
+    document.getElementById('cardNumDisplay').textContent = '•••• •••• •••• ••••';
+    document.getElementById('cardHolderDisplay').textContent = 'YOUR NAME';
+    document.getElementById('cardExpiryDisplay').textContent = 'MM/YY';
+    showNotification('🗑 Card removed.');
+}
+
+/* ── LIBRARY / DOWNLOADS ── */
+const downloadProgress = {};
+
+function renderLibrary() {
+    const content = document.getElementById('libraryContent');
+    const myGames = games.filter(g => ownedGames.includes(g.id));
+    if (myGames.length === 0) {
+        content.innerHTML = `<div class="library-grid"><div class="empty-library">
+            <p style="font-size:2rem;margin-bottom:1rem">🎮</p>
+            <p>Your library is empty.</p>
+            <p style="margin-top:0.5rem"><a onclick="goHome()">Browse the store</a> to get your first game!</p>
+        </div></div>`;
+        return;
+    }
+    content.innerHTML = `<div class="library-grid">${myGames.map(g => createLibraryCard(g)).join('')}</div>`;
+}
+
+function createLibraryCard(game) {
+    const state = downloadProgress[game.id] || 'idle';
+    const dlBtn = state === 'done'
+        ? `<button class="btn-dl btn-dl-installing" disabled>✅ Installed</button>`
+        : state === 'downloading'
+        ? `<button class="btn-dl btn-dl-installing" disabled>⏳ Downloading...</button>`
+        : `<button class="btn-dl" onclick="downloadGame(${game.id})">⬇️ Download</button>`;
+    return `
+        <div class="library-card" id="libcard-${game.id}">
+            <div class="library-card-img">
+                <img src="${game.image}" alt="${game.title}"
+                    onerror="this.parentElement.style.background='linear-gradient(135deg,#1a3a1a,#0a0e0a)'">
+            </div>
+            <div class="library-card-body">
+                <div class="library-card-title">${game.title}</div>
+                <div class="library-card-genre">${game.genre}</div>
+                <div class="library-card-actions">
+                    <div id="dlbtn-${game.id}">${dlBtn}</div>
+                    <button class="btn-play" onclick="playGame('${game.title.replace(/'/g,"\\'")}')">▶ Play</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function downloadGame(gameId) {
+    const game = games.find(g => g.id === gameId);
+    if (!game) return;
+    downloadProgress[gameId] = 'downloading';
+    document.getElementById('dlbtn-' + gameId).innerHTML =
+        `<button class="btn-dl btn-dl-installing" disabled>⏳ Downloading...</button>`;
+    showNotification(`⬇️ Downloading ${game.title}...`);
+    setTimeout(() => {
+        downloadProgress[gameId] = 'done';
+        const el = document.getElementById('dlbtn-' + gameId);
+        if (el) el.innerHTML = `<button class="btn-dl btn-dl-installing" disabled>✅ Installed</button>`;
+        showNotification(`✅ ${game.title} installed!`);
+        const link = document.createElement('a');
+        link.href = 'data:application/octet-stream;base64,VVhm';
+        link.download = game.title.replace(/[^a-z0-9]/gi,'_') + '_VnP.pkg';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }, 2500);
+}
+
+function playGame(title) {
+    showNotification(`🎮 Launching ${title}...`);
+}
+
+function setupEventListeners() {
+    window.onclick = function (e) {
+        const lm = document.getElementById('loginModal');
+        const sm = document.getElementById('signupModal');
+        const pd = document.getElementById('profileDropdown');
+        const pa = document.getElementById('userInitial');
+        if (e.target === lm) lm.style.display = 'none';
+        if (e.target === sm) sm.style.display = 'none';
+        if (!pd.contains(e.target) && !pa.contains(e.target)) closeProfileDropdown();
+    };
+}
+</script>
+</body>
+</html>
